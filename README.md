@@ -32,3 +32,10 @@ Console.WriteLine(a.B("abc"));
 Console.WriteLine(a.C(TimeSpan.FromSeconds(9999)));
 Console.WriteLine(a.D(new(2, 3), new(5, 7)));
 ```
+
+```
+30
+3
+(2, 46)
+P { X = 7, Y = 10 }
+```
