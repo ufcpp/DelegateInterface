@@ -56,7 +56,7 @@ public interface IA
 }
 ```
 
-The builder class create a class:
+The builder class dynamically create a proxy class:
 
 ```cs
 class IA_Proxy : IDynamicInterface, IA
