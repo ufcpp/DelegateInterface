@@ -22,7 +22,7 @@ namespace DelegateInterface;
 /// <see cref="Build(Type)"/> method create a proxy type:
 ///
 /// <code><![CDATA[
-/// interface IA_Proxy : IDynamicInterface, IA
+/// class IA_Proxy : IDynamicInterface, IA
 /// {
 ///     public IDictionary<string, Delegate> Methods { get; }
 ///     public void M1() => Methods["M1"].DynamicInvoke();
