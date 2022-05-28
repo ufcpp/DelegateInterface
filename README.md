@@ -40,7 +40,7 @@ Console.WriteLine(a.D(new(2, 3), new(5, 7)));
 P { X = 7, Y = 10 }
 ```
 
-## How to work
+## How it works
 
 `DelegateInterfaceTypeBuilder` class build a proxy class by using `System.Reflection.Emit`.
 
