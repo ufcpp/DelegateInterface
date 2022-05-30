@@ -61,6 +61,35 @@ public class InvocationTest
     }
 
     [Fact]
+    public void AnyTypeOfDelegate()
+    {
+        var x = Cache<ITest>.CreateInstance();
+        var m = ((IDelegateInterface)x).Methods;
+
+        m[nameof(ITest.P00)] = () => { };
+        int factor = 10;
+        m[nameof(ITest.P11)] = (int x) => x * factor;
+        m[nameof(ITest.P22)] = static (string s) => s;
+        m[nameof(ITest.P12)] = M;
+        m[nameof(ITest.P01)] = new A().M;
+        m[nameof(ITest.P21)] = new B().M;
+
+        x.P00();
+        x.P01();
+        x.P02();
+        x.P10(0);
+        x.P11(0);
+        x.P12(0);
+        x.P20("");
+        x.P21("");
+        x.P22("");
+    }
+
+    private static string M(int x) => x.ToString();
+    private class A { public int M() => 0; }
+    private struct B { public int M(string x) => x.Length; }
+
+    [Fact]
     public void UserDefinedType()
     {
         var x = Cache<ITest>.CreateInstance();
