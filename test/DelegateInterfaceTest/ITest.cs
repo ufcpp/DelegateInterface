@@ -2,5 +2,5 @@
 
 public interface ITest
 {
-    string X(string x);
+    string A(string x);
 }

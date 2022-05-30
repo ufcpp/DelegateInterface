@@ -10,17 +10,17 @@ public class InterfaceToDelegateMapTest
     {
         {
             var map = new InterfaceToDelegateMap<ITest>();
-            map.Add("X", (string s) => s);
+            map.Add("A", (string s) => s);
         }
 
         {
             var map = new InterfaceToDelegateMap<ITest>();
-            map["X"] = (string s) => s;
+            map["A"] = (string s) => s;
         }
 
         {
             ICollection<KeyValuePair<string, Delegate>> map = new InterfaceToDelegateMap<ITest>();
-            map.Add(new("X", (string s) => s));
+            map.Add(new("A", (string s) => s));
         }
 
         Assert.Throws<InvalidOperationException>(() =>
