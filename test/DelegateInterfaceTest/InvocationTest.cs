@@ -6,6 +6,15 @@ namespace DelegateInterfaceTest;
 public class InvocationTest
 {
     [Fact]
+    public void ReturnDefaultIfDelegateNotAdded()
+    {
+        var x = Cache<ITest>.CreateInstance();
+
+        Assert.Equal(0, x.P01());
+        Assert.Null(x.P02());
+    }
+
+    [Fact]
     public void UpdateDelegate()
     {
         const string methodName = nameof(ITest.P22);
