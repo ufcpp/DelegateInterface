@@ -42,11 +42,21 @@ public class DelegateInterfaceTypeBuilder
         _module = _assembly.DefineDynamicModule("DynamicModule");
     }
 
+    private static IEnumerable<MethodInfo> GetAllMethods(Type t)
+    {
+        var list = new List<Type> { t };
+        if (t.GetInterfaces() is { Length: > 0 } i) list.AddRange(i);
+
+        foreach (var baseInterface in list)
+            foreach (var m in baseInterface.GetMethods())
+                yield return m;
+    }
+
     private static void Check(Type interfaceType)
     {
         if (!interfaceType.IsInterface) throw new InvalidOperationException("must be interface");
 
-        foreach (var m in interfaceType.GetMethods())
+        foreach (var m in GetAllMethods(interfaceType))
         {
             if (m.ReturnType.IsByRef) throw new InvalidOperationException("ref return not supported");
             if (m.ReturnType.IsByRefLike) throw new InvalidOperationException("ref-like return not supported");
@@ -85,7 +95,7 @@ public class DelegateInterfaceTypeBuilder
     {
         tb.AddInterfaceImplementation(interfaceType);
 
-        foreach (var m in interfaceType.GetMethods())
+        foreach (var m in GetAllMethods(interfaceType))
         {
             EmitInterfaceMethod(tb, map, m);
         }

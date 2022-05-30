@@ -29,3 +29,13 @@ public interface IRefParam { void M(ref int x); }
 public interface IRefLikeParam { void M(Span<int> x); }
 public interface IInParam { void M(in int x); }
 public interface IOutParam { void M(out int x); }
+
+public interface IBase
+{
+    int M();
+}
+
+public interface IDerived : IBase
+{
+    string N();
+}
