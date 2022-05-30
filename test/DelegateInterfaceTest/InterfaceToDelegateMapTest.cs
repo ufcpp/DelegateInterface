@@ -8,37 +8,40 @@ public class InterfaceToDelegateMapTest
     [Fact]
     public void ThrowIfMethodNotExsit()
     {
+        const string methodName = nameof(ITest.A);
+        const string invalidName = "NotExist";
+
         {
             var map = new InterfaceToDelegateMap<ITest>();
-            map.Add("A", (string s) => s);
+            map.Add(methodName, (string s) => s);
         }
 
         {
             var map = new InterfaceToDelegateMap<ITest>();
-            map["A"] = (string s) => s;
+            map[methodName] = (string s) => s;
         }
 
         {
             ICollection<KeyValuePair<string, Delegate>> map = new InterfaceToDelegateMap<ITest>();
-            map.Add(new("A", (string s) => s));
+            map.Add(new(methodName, (string s) => s));
         }
 
         Assert.Throws<InvalidOperationException>(() =>
         {
             var map = new InterfaceToDelegateMap<ITest>();
-            map.Add("NotExist", (string s) => s);
+            map.Add(invalidName, (string s) => s);
         });
 
         Assert.Throws<InvalidOperationException>(() =>
         {
             var map = new InterfaceToDelegateMap<ITest>();
-            map["NotExist"] = (string s) => s;
+            map[invalidName] = (string s) => s;
         });
 
         Assert.Throws<InvalidOperationException>(() =>
         {
             ICollection<KeyValuePair<string, Delegate>> map = new InterfaceToDelegateMap<ITest>();
-            map.Add(new("NotExist", (string s) => s));
+            map.Add(new(invalidName, (string s) => s));
         });
     }
 }
