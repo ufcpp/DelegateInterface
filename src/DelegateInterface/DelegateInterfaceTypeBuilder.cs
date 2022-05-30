@@ -44,7 +44,14 @@ public class DelegateInterfaceTypeBuilder
 
     public Type Build(Type interfaceType)
     {
-        var tb = _module.DefineType(interfaceType.Name + "_Proxy");
+        var typeName = interfaceType.Namespace + "." + interfaceType.Name + "_Proxy";
+
+        // already built
+        var t = _module.GetType(typeName);
+        if (t is not null) return t;
+
+        // build new
+        var tb = _module.DefineType(typeName);
 
         var map = EmitDynamicInterface(tb);
         EmitInterface(interfaceType, tb, map);
