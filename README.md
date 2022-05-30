@@ -49,10 +49,10 @@ If you have a interface:
 ```cs
 public interface IA
 {
-    int A(int x);
-    int B(string x);
-    (int x, int y) C(TimeSpan x);
-    P D(P x, P y);
+    void M1();
+    string M2();
+    void M3(TimeSpan x);
+    int M4(int x, int y);
 }
 ```
 
