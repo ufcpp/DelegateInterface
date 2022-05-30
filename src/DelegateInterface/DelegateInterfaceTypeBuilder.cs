@@ -72,14 +72,28 @@ public class DelegateInterfaceTypeBuilder
             m.GetParameters().Select(p => p.ParameterType).ToArray());
 
         var il = mb.GetILGenerator();
+        var r = m.ReturnType;
+
+        var hasValueLabel = il.DefineLabel();
+        var value = il.DeclareLocal(typeof(Delegate));
 
         // var local = this._map;
         il.Emit(OpCodes.Ldarg_0);
         il.Emit(OpCodes.Ldfld, map);
 
-        // var d = local[nameof(Method)]
+        // var d = local.GetOrDefault(nameof(Method))
         il.Emit(OpCodes.Ldstr, m.Name);
-        il.Emit(OpCodes.Callvirt, typeof(Map).GetMethod("get_Item")!);
+        il.Emit(OpCodes.Ldloca, value);
+        il.Emit(OpCodes.Callvirt, typeof(Map).GetMethod(nameof(Map.TryGetValue))!);
+
+        // if (d is null) return;
+        il.Emit(OpCodes.Brtrue_S, hasValueLabel);
+        if (r != typeof(void)) il.Emit(OpCodes.Ldnull);
+        il.Emit(OpCodes.Ret);
+
+        il.MarkLabel(hasValueLabel);
+
+        il.Emit(OpCodes.Ldloc, value);
 
         // var args = new object[] { arg1, arg2, ... };
         var parameters = m.GetParameters();
@@ -98,7 +112,6 @@ public class DelegateInterfaceTypeBuilder
         // d.DynamicInvoke(args);
         il.Emit(OpCodes.Callvirt, typeof(Delegate).GetMethod("DynamicInvoke")!);
 
-        var r = m.ReturnType;
         if (r == typeof(void)) il.Emit(OpCodes.Pop);
         else if (r.IsValueType) il.Emit(OpCodes.Unbox_Any, r);
         else il.Emit(OpCodes.Castclass, r);
