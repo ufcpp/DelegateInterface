@@ -16,6 +16,8 @@ public interface ITest
     R R12(S x);
     S R21(R x);
     R R22(R x);
+
+    (int A, int B) ManyParameters(int a, int b, int c, int d, params int[] e);
 }
 
 public record R(int X, int Y);

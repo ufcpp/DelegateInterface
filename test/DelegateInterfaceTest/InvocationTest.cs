@@ -92,6 +92,16 @@ public class InvocationTest
         Assert.Throws<InvalidOperationException>(() => m[nameof(ITest.P20)] = void (int _) => { });
         Assert.Throws<InvalidOperationException>(() => m[nameof(ITest.P21)] = (string x) => x);
         Assert.Throws<InvalidOperationException>(() => m[nameof(ITest.P22)] = (string x) => x.Length);
+    }
 
+    [Fact]
+    public void ManyParameters()
+    {
+        var x = Cache<ITest>.CreateInstance();
+        var m = ((IDelegateInterface)x).Methods;
+
+        m[nameof(ITest.ManyParameters)] = (int a, int b, int c, int d, int[] e) => (a + b + c + d + e.Sum(), a * b * c * d * e.Aggregate(1, (x, y) => x * y));
+
+        Assert.Equal((45, 362880), x.ManyParameters(1, 2, 3, 4, 5, 6, 7, 8, 9));
     }
 }
