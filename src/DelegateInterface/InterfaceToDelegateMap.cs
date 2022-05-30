@@ -10,16 +10,28 @@ public class InterfaceToDelegateMap<TInterface> : IDictionary<string, Delegate>
 
     private static void Check(MethodInfo method, Type delegateType)
     {
-        //todo: check method signature
+        var invoke = delegateType.GetMethod("Invoke")!;
+
+        if (method.ReturnType != invoke.ReturnType) throw new InvalidOperationException("return type not matched");
+
+        var mp = method.GetParameters();
+        var ip = invoke.GetParameters();
+
+        if (mp.Length != ip.Length) throw new InvalidOperationException("#parameter not matched");
+
+        for (int i = 0; i < mp.Length; i++)
+        {
+            if (mp[i].ParameterType != ip[i].ParameterType) throw new InvalidOperationException($"parameter type not matched: {mp[i].Name}, {ip[i].Name}");
+        }
     }
 
-    private KeyValuePair<string, Delegate> Check(KeyValuePair<string, Delegate> item)
+    private static KeyValuePair<string, Delegate> Check(KeyValuePair<string, Delegate> item)
     {
-        Check(item.Key, item.Value);
+        InterfaceToDelegateMap<TInterface>.Check(item.Key, item.Value);
         return item;
     }
 
-    private Delegate Check(string key, Delegate d)
+    private static Delegate Check(string key, Delegate d)
     {
         var interfaceType = typeof(TInterface);
 
@@ -31,13 +43,13 @@ public class InterfaceToDelegateMap<TInterface> : IDictionary<string, Delegate>
         return d;
     }
 
-    public Delegate this[string key] { get => _map[key]; set => _map[key] = Check(key, value); }
+    public Delegate this[string key] { get => _map[key]; set => _map[key] = InterfaceToDelegateMap<TInterface>.Check(key, value); }
     public ICollection<string> Keys => _map.Keys;
     public ICollection<Delegate> Values => _map.Values;
     public int Count => _map.Count;
     public bool IsReadOnly => false;
-    public void Add(string key, Delegate value) => _map.Add(key, Check(key, value));
-    public void Add(KeyValuePair<string, Delegate> item) => ((ICollection<KeyValuePair<string, Delegate>>)_map).Add(Check(item));
+    public void Add(string key, Delegate value) => _map.Add(key, InterfaceToDelegateMap<TInterface>.Check(key, value));
+    public void Add(KeyValuePair<string, Delegate> item) => ((ICollection<KeyValuePair<string, Delegate>>)_map).Add(InterfaceToDelegateMap<TInterface>.Check(item));
     public void Clear() => _map.Clear();
     public bool Contains(KeyValuePair<string, Delegate> item) => ((ICollection<KeyValuePair<string, Delegate>>)_map).Contains(item);
     public bool ContainsKey(string key) => _map.ContainsKey(key);

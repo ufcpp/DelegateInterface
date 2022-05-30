@@ -37,13 +37,13 @@ public class InvocationTest
 
         int invoked = 0;
 
-        m[nameof(ITest.P00)] = () => invoked |= 1;
+        m[nameof(ITest.P00)] = void () => invoked |= 1;
         m[nameof(ITest.P01)] = () => { invoked |= 1 << 1; return 0; };
         m[nameof(ITest.P02)] = () => { invoked |= 1 << 2; return ""; };
-        m[nameof(ITest.P10)] = (int _) => invoked |= 1 << 3;
+        m[nameof(ITest.P10)] = void (int _) => invoked |= 1 << 3;
         m[nameof(ITest.P11)] = (int _) => { invoked |= 1 << 4; return 0; };
         m[nameof(ITest.P12)] = (int _) => { invoked |= 1 << 5; return ""; };
-        m[nameof(ITest.P20)] = (string _) => invoked |= 1 << 6;
+        m[nameof(ITest.P20)] = void (string _) => invoked |= 1 << 6;
         m[nameof(ITest.P21)] = (string _) => { invoked |= 1 << 7; return 0; };
         m[nameof(ITest.P22)] = (string _) => { invoked |= 1 << 8; return ""; };
 
@@ -75,5 +75,23 @@ public class InvocationTest
         Assert.Equal(new(1, 2), x.R12(new(1, 2)));
         Assert.Equal(new(1, 2), x.R21(new(1, 2)));
         Assert.Equal(new(1, 2), x.R22(new(1, 2)));
+    }
+
+    [Fact]
+    public void DelegateNotMatched()
+    {
+        var x = Cache<ITest>.CreateInstance();
+        var m = ((IDelegateInterface)x).Methods;
+
+        Assert.Throws<InvalidOperationException>(() => m[nameof(ITest.P00)] = void (int x) => { });
+        Assert.Throws<InvalidOperationException>(() => m[nameof(ITest.P01)] = () => "");
+        Assert.Throws<InvalidOperationException>(() => m[nameof(ITest.P02)] = () => 1);
+        Assert.Throws<InvalidOperationException>(() => m[nameof(ITest.P10)] = void (string _) => { });
+        Assert.Throws<InvalidOperationException>(() => m[nameof(ITest.P11)] = void (int _) => { });
+        Assert.Throws<InvalidOperationException>(() => m[nameof(ITest.P12)] = (int x) => x);
+        Assert.Throws<InvalidOperationException>(() => m[nameof(ITest.P20)] = void (int _) => { });
+        Assert.Throws<InvalidOperationException>(() => m[nameof(ITest.P21)] = (string x) => x);
+        Assert.Throws<InvalidOperationException>(() => m[nameof(ITest.P22)] = (string x) => x.Length);
+
     }
 }
