@@ -31,11 +31,23 @@ public class InterfaceToDelegateMap<TInterface> : IDictionary<string, Delegate>
         return item;
     }
 
+    private static MethodInfo? GetMethod(string key, Type interfaceType)
+    {
+        if (interfaceType.GetMethod(key) is { } m) return m;
+
+        foreach (var baseInterface in interfaceType.GetInterfaces())
+        {
+            if (baseInterface.GetMethod(key) is { } m1) return m1;
+        }
+
+        return null;
+    }
+
     private static Delegate Check(string key, Delegate d)
     {
         var interfaceType = typeof(TInterface);
 
-        var m = interfaceType.GetMethod(key);
+        var m = GetMethod(key, interfaceType);
         if (m is null) throw new InvalidOperationException($"{interfaceType.Name} does not have a method {key}.");
 
         var delegateType = d.GetType();
