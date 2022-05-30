@@ -44,6 +44,8 @@ public class DelegateInterfaceTypeBuilder
 
     private static void Check(Type interfaceType)
     {
+        if (!interfaceType.IsInterface) throw new InvalidOperationException("must be interface");
+
         foreach (var m in interfaceType.GetMethods())
         {
             if (m.ReturnType.IsByRef) throw new InvalidOperationException("ref return not supported");

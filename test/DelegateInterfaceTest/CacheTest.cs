@@ -29,4 +29,11 @@ public class CacheTest
         Assert.Throws<InvalidOperationException>(() => _ = Cache<IInParam>.ProxyType);
         Assert.Throws<InvalidOperationException>(() => _ = Cache<IOutParam>.ProxyType);
     }
+
+    [Fact]
+    public void MustBeInterface()
+    {
+        Assert.Throws<InvalidOperationException>(() => _ = Cache<R>.ProxyType);
+        Assert.Throws<InvalidOperationException>(() => _ = Cache<S>.ProxyType);
+    }
 }
