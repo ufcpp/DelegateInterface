@@ -1,6 +1,5 @@
 ﻿using System.Reflection;
 using System.Reflection.Emit;
-using Map = System.Collections.Generic.Dictionary<string, System.Delegate>;
 
 namespace DelegateInterface;
 
@@ -84,7 +83,7 @@ public class DelegateInterfaceTypeBuilder
         // var d = local.GetOrDefault(nameof(Method))
         il.Emit(OpCodes.Ldstr, m.Name);
         il.Emit(OpCodes.Ldloca, value);
-        il.Emit(OpCodes.Callvirt, typeof(Map).GetMethod(nameof(Map.TryGetValue))!);
+        il.Emit(OpCodes.Callvirt, typeof(InterfaceToDelegateMap).GetMethod(nameof(InterfaceToDelegateMap.TryGetValue))!);
 
         // if (d is null) return;
         il.Emit(OpCodes.Brtrue_S, hasValueLabel);
@@ -124,7 +123,7 @@ public class DelegateInterfaceTypeBuilder
         tb.AddInterfaceImplementation(typeof(IDelegateInterface));
 
         // private Map _map;
-        var map = tb.DefineField("_map", typeof(Map), FieldAttributes.Private);
+        var map = tb.DefineField("_map", typeof(InterfaceToDelegateMap), FieldAttributes.Private);
 
         // public T() => _map = new();
         EmitDynamicInterfaceCtor(tb, map);
@@ -142,7 +141,7 @@ public class DelegateInterfaceTypeBuilder
 
         // this._map = new();
         il.Emit(OpCodes.Ldarg_0);
-        il.Emit(OpCodes.Newobj, typeof(Map).GetConstructor(Array.Empty<Type>())!);
+        il.Emit(OpCodes.Newobj, typeof(InterfaceToDelegateMap).GetConstructor(Array.Empty<Type>())!);
         il.Emit(OpCodes.Stfld, map);
 
         // : base()
