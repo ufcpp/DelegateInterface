@@ -20,3 +20,10 @@ public interface ITest
 
 public record R(int X, int Y);
 public record struct S(int X, int Y);
+
+public interface IRefReturn { ref int M(); }
+public interface IRefLikeReturn { Span<int> M(); }
+public interface IRefParam { void M(ref int x); }
+public interface IRefLikeParam { void M(Span<int> x); }
+public interface IInParam { void M(in int x); }
+public interface IOutParam { void M(out int x); }

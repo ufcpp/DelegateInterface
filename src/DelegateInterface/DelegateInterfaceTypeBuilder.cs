@@ -42,8 +42,27 @@ public class DelegateInterfaceTypeBuilder
         _module = _assembly.DefineDynamicModule("DynamicModule");
     }
 
+    private static void Check(Type interfaceType)
+    {
+        foreach (var m in interfaceType.GetMethods())
+        {
+            if (m.ReturnType.IsByRef) throw new InvalidOperationException("ref return not supported");
+            if (m.ReturnType.IsByRefLike) throw new InvalidOperationException("ref-like return not supported");
+
+            foreach (var p in m.GetParameters())
+            {
+                if (p.IsIn) throw new InvalidOperationException("in parameter not supported");
+                if (p.IsOut) throw new InvalidOperationException("out parameter not supported");
+                if (p.ParameterType.IsByRef) throw new InvalidOperationException("ref parameter not supported");
+                if (p.ParameterType.IsByRefLike) throw new InvalidOperationException("ref-like parameter not supported");
+            }
+        }
+    }
+
     public Type Build(Type interfaceType)
     {
+        Check(interfaceType);
+
         var typeName = interfaceType.Namespace + "." + interfaceType.Name + "_Proxy";
 
         // already built

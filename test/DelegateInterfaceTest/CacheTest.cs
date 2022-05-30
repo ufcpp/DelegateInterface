@@ -18,4 +18,15 @@ public class CacheTest
         Assert.NotNull(Cache.GetProxyType(typeof(ITest)));
         Assert.NotNull(Cache.CreateInstance(typeof(ITest)));
     }
+
+    [Fact]
+    public void RefLikeTypeNotSupported()
+    {
+        Assert.Throws<InvalidOperationException>(() => _ = Cache<IRefReturn>.ProxyType);
+        Assert.Throws<InvalidOperationException>(() => _ = Cache<IRefLikeReturn>.ProxyType);
+        Assert.Throws<InvalidOperationException>(() => _ = Cache<IRefParam>.ProxyType);
+        Assert.Throws<InvalidOperationException>(() => _ = Cache<IRefLikeParam>.ProxyType);
+        Assert.Throws<InvalidOperationException>(() => _ = Cache<IInParam>.ProxyType);
+        Assert.Throws<InvalidOperationException>(() => _ = Cache<IOutParam>.ProxyType);
+    }
 }
