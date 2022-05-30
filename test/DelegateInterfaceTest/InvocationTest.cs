@@ -6,17 +6,48 @@ namespace DelegateInterfaceTest;
 public class InvocationTest
 {
     [Fact]
-    public void Invoke()
+    public void UpdateDelegate()
     {
-        const string methodName = nameof(ITest.A);
+        const string methodName = nameof(ITest.P22);
 
         var x = Cache<ITest>.CreateInstance();
         var m = ((IDelegateInterface)x).Methods;
 
         m[methodName] = static (string s) => s;
-        Assert.Equal("abc", x.A("abc"));
+        Assert.Equal("abc", x.P22("abc"));
 
         m[methodName] = static (string s) => s + s;
-        Assert.Equal("abcabc", x.A("abc"));
+        Assert.Equal("abcabc", x.P22("abc"));
+    }
+
+    [Fact]
+    public void AnyTypeOfPrameterAndReturn()
+    {
+        var x = Cache<ITest>.CreateInstance();
+        var m = ((IDelegateInterface)x).Methods;
+
+        int invoked = 0;
+
+        m[nameof(ITest.P00)] = () => invoked |= 1;
+        m[nameof(ITest.P01)] = () => { invoked |= 1 << 1; return 0; };
+        m[nameof(ITest.P02)] = () => { invoked |= 1 << 2; return ""; };
+        m[nameof(ITest.P10)] = (int _) => invoked |= 1 << 3;
+        m[nameof(ITest.P11)] = (int _) => { invoked |= 1 << 4; return 0; };
+        m[nameof(ITest.P12)] = (int _) => { invoked |= 1 << 5; return ""; };
+        m[nameof(ITest.P20)] = (string _) => invoked |= 1 << 6;
+        m[nameof(ITest.P21)] = (string _) => { invoked |= 1 << 7; return 0; };
+        m[nameof(ITest.P22)] = (string _) => { invoked |= 1 << 8; return ""; };
+
+        x.P00();
+        x.P01();
+        x.P02();
+        x.P10(0);
+        x.P11(0);
+        x.P12(0);
+        x.P20("");
+        x.P21("");
+        x.P22("");
+
+        Assert.Equal((1 << 9) - 1, invoked);
     }
 }
