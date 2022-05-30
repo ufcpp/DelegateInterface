@@ -1,24 +1,43 @@
 ﻿using System.Collections;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 
 namespace DelegateInterface;
 
-public class InterfaceToDelegateMap : IDictionary<string, Delegate>
+public class InterfaceToDelegateMap<TInterface> : IDictionary<string, Delegate>
 {
     private readonly Dictionary<string, Delegate> _map = new();
 
-    public Delegate this[string key]
+    private static void Check(MethodInfo method, Type delegateType)
     {
-        get => _map[key];
-        set => _map[key] = value; //todo: type check
+        //todo: check method signature
     }
 
+    private KeyValuePair<string, Delegate> Check(KeyValuePair<string, Delegate> item)
+    {
+        Check(item.Key, item.Value);
+        return item;
+    }
+
+    private Delegate Check(string key, Delegate d)
+    {
+        var interfaceType = typeof(TInterface);
+
+        var m = interfaceType.GetMethod(key);
+        if (m is null) throw new InvalidOperationException($"{interfaceType.Name} does not have a method {key}.");
+
+        var delegateType = d.GetType();
+        Check(m, delegateType);
+        return d;
+    }
+
+    public Delegate this[string key] { get => _map[key]; set => _map[key] = Check(key, value); }
     public ICollection<string> Keys => _map.Keys;
     public ICollection<Delegate> Values => _map.Values;
     public int Count => _map.Count;
     public bool IsReadOnly => false;
-    public void Add(string key, Delegate value) => _map.Add(key, value);
-    public void Add(KeyValuePair<string, Delegate> item) => ((ICollection<KeyValuePair<string, Delegate>>)_map).Add(item);
+    public void Add(string key, Delegate value) => _map.Add(key, Check(key, value));
+    public void Add(KeyValuePair<string, Delegate> item) => ((ICollection<KeyValuePair<string, Delegate>>)_map).Add(Check(item));
     public void Clear() => _map.Clear();
     public bool Contains(KeyValuePair<string, Delegate> item) => ((ICollection<KeyValuePair<string, Delegate>>)_map).Contains(item);
     public bool ContainsKey(string key) => _map.ContainsKey(key);

@@ -53,17 +53,18 @@ public class DelegateInterfaceTypeBuilder
         // build new
         var tb = _module.DefineType(typeName);
 
-        var map = EmitDynamicInterface(tb);
-        EmitInterface(interfaceType, tb, map);
+        var mapType = typeof(InterfaceToDelegateMap<>).MakeGenericType(interfaceType);
+        var map = EmitDynamicInterface(tb, mapType);
+        EmitInterface(tb, interfaceType, map);
 
         return tb.CreateType()!;
     }
 
-    private static void EmitInterface(Type t, TypeBuilder tb, FieldBuilder map)
+    private static void EmitInterface(TypeBuilder tb, Type interfaceType, FieldBuilder map)
     {
-        tb.AddInterfaceImplementation(t);
+        tb.AddInterfaceImplementation(interfaceType);
 
-        foreach (var m in t.GetMethods())
+        foreach (var m in interfaceType.GetMethods())
         {
             EmitInterfaceMethod(tb, map, m);
         }
@@ -90,7 +91,7 @@ public class DelegateInterfaceTypeBuilder
         // var d = local.GetOrDefault(nameof(Method))
         il.Emit(OpCodes.Ldstr, m.Name);
         il.Emit(OpCodes.Ldloca, value);
-        il.Emit(OpCodes.Callvirt, typeof(InterfaceToDelegateMap).GetMethod(nameof(InterfaceToDelegateMap.TryGetValue))!);
+        il.Emit(OpCodes.Callvirt, typeof(IDictionary<string, Delegate>).GetMethod("TryGetValue")!);
 
         // if (d is null) return;
         il.Emit(OpCodes.Brtrue_S, hasValueLabel);
@@ -125,15 +126,15 @@ public class DelegateInterfaceTypeBuilder
         il.Emit(OpCodes.Ret);
     }
 
-    private static FieldBuilder EmitDynamicInterface(TypeBuilder tb)
+    private static FieldBuilder EmitDynamicInterface(TypeBuilder tb, Type mapType)
     {
         tb.AddInterfaceImplementation(typeof(IDelegateInterface));
 
         // private Map _map;
-        var map = tb.DefineField("_map", typeof(InterfaceToDelegateMap), FieldAttributes.Private);
+        var map = tb.DefineField("_map", mapType, FieldAttributes.Private);
 
         // public T() => _map = new();
-        EmitDynamicInterfaceCtor(tb, map);
+        EmitDynamicInterfaceCtor(tb, mapType, map);
 
         // public Map Methods => _map;
         EmitMethodsProperty(tb, map);
@@ -141,14 +142,14 @@ public class DelegateInterfaceTypeBuilder
         return map;
     }
 
-    private static void EmitDynamicInterfaceCtor(TypeBuilder tb, FieldBuilder map)
+    private static void EmitDynamicInterfaceCtor(TypeBuilder tb, Type mapType, FieldBuilder map)
     {
         var ctor = tb.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard, null);
         var il = ctor.GetILGenerator();
 
         // this._map = new();
         il.Emit(OpCodes.Ldarg_0);
-        il.Emit(OpCodes.Newobj, typeof(InterfaceToDelegateMap).GetConstructor(Array.Empty<Type>())!);
+        il.Emit(OpCodes.Newobj, mapType.GetConstructor(Array.Empty<Type>())!);
         il.Emit(OpCodes.Stfld, map);
 
         // : base()
