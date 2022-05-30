@@ -50,4 +50,21 @@ public class InvocationTest
 
         Assert.Equal((1 << 9) - 1, invoked);
     }
+
+    [Fact]
+    public void UserDefinedType()
+    {
+        var x = Cache<ITest>.CreateInstance();
+        var m = ((IDelegateInterface)x).Methods;
+
+        m[nameof(ITest.R11)] = S (S x) => x;
+        m[nameof(ITest.R12)] = R (S x) => new(x.X, x.Y);
+        m[nameof(ITest.R21)] = S (R x) => new(x.X, x.Y);
+        m[nameof(ITest.R22)] = R (R x) => x with { };
+
+        Assert.Equal(new(1, 2), x.R11(new(1, 2)));
+        Assert.Equal(new(1, 2), x.R12(new(1, 2)));
+        Assert.Equal(new(1, 2), x.R21(new(1, 2)));
+        Assert.Equal(new(1, 2), x.R22(new(1, 2)));
+    }
 }
