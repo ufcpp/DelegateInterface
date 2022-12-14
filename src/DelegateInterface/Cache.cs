@@ -23,9 +23,15 @@ public static class Cache
     {
         lock (_interfaceToProsy)
         {
+#if NET6_0_OR_GREATER
             ref var proxyType = ref CollectionsMarshal.GetValueRefOrAddDefault(_interfaceToProsy, interfaceType, out var exists);
             if (!exists) proxyType = Create(interfaceType);
             return proxyType!;
+#else
+            if (!_interfaceToProsy.TryGetValue(interfaceType, out var proxyType))
+                _interfaceToProsy[interfaceType] = proxyType = Create(interfaceType);
+            return proxyType!;
+#endif
         }
     }
 
