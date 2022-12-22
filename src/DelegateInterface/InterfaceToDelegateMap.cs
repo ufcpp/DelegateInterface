@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace DelegateInterface;
 
-public class InterfaceToDelegateMap<TInterface> : IDictionary<string, Delegate>
+public class InterfaceToDelegateMap<T> : IDictionary<string, Delegate>
 {
     private readonly Dictionary<string, Delegate> _map = new();
 
@@ -27,7 +27,7 @@ public class InterfaceToDelegateMap<TInterface> : IDictionary<string, Delegate>
 
     private static KeyValuePair<string, Delegate> Check(KeyValuePair<string, Delegate> item)
     {
-        InterfaceToDelegateMap<TInterface>.Check(item.Key, item.Value);
+        InterfaceToDelegateMap<T>.Check(item.Key, item.Value);
         return item;
     }
 
@@ -45,23 +45,21 @@ public class InterfaceToDelegateMap<TInterface> : IDictionary<string, Delegate>
 
     private static Delegate Check(string key, Delegate d)
     {
-        var interfaceType = typeof(TInterface);
+        var interfaceType = typeof(T);
 
-        var m = GetMethod(key, interfaceType);
-        if (m is null) throw new InvalidOperationException($"{interfaceType.Name} does not have a method {key}.");
-
+        var m = GetMethod(key, interfaceType) ?? throw new InvalidOperationException($"{interfaceType.Name} does not have a method {key}.");
         var delegateType = d.GetType();
         Check(m, delegateType);
         return d;
     }
 
-    public Delegate this[string key] { get => _map[key]; set => _map[key] = InterfaceToDelegateMap<TInterface>.Check(key, value); }
+    public Delegate this[string key] { get => _map[key]; set => _map[key] = InterfaceToDelegateMap<T>.Check(key, value); }
     public ICollection<string> Keys => _map.Keys;
     public ICollection<Delegate> Values => _map.Values;
     public int Count => _map.Count;
     public bool IsReadOnly => false;
-    public void Add(string key, Delegate value) => _map.Add(key, InterfaceToDelegateMap<TInterface>.Check(key, value));
-    public void Add(KeyValuePair<string, Delegate> item) => ((ICollection<KeyValuePair<string, Delegate>>)_map).Add(InterfaceToDelegateMap<TInterface>.Check(item));
+    public void Add(string key, Delegate value) => _map.Add(key, InterfaceToDelegateMap<T>.Check(key, value));
+    public void Add(KeyValuePair<string, Delegate> item) => ((ICollection<KeyValuePair<string, Delegate>>)_map).Add(InterfaceToDelegateMap<T>.Check(item));
     public void Clear() => _map.Clear();
     public bool Contains(KeyValuePair<string, Delegate> item) => ((ICollection<KeyValuePair<string, Delegate>>)_map).Contains(item);
     public bool ContainsKey(string key) => _map.ContainsKey(key);
