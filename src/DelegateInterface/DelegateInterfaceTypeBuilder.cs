@@ -42,66 +42,74 @@ public class DelegateInterfaceTypeBuilder
         _module = _assembly.DefineDynamicModule("DynamicModule");
     }
 
-    private static IEnumerable<MethodInfo> GetAllMethods(Type t)
+    public Type Build(Type type)
     {
-        var list = new List<Type> { t };
-        if (t.GetInterfaces() is { Length: > 0 } i) list.AddRange(i);
-
-        foreach (var baseInterface in list)
-            foreach (var m in baseInterface.GetMethods())
-                yield return m;
-    }
-
-    private static void Check(Type interfaceType)
-    {
-        if (!interfaceType.IsInterface) throw new InvalidOperationException("must be interface");
-
-        foreach (var m in GetAllMethods(interfaceType))
-        {
-            if (m.ReturnType.IsByRef) throw new InvalidOperationException("ref return not supported");
-            if (m.ReturnType.IsByRefLike) throw new InvalidOperationException("ref-like return not supported");
-
-            foreach (var p in m.GetParameters())
-            {
-                if (p.IsIn) throw new InvalidOperationException("in parameter not supported");
-                if (p.IsOut) throw new InvalidOperationException("out parameter not supported");
-                if (p.ParameterType.IsByRef) throw new InvalidOperationException("ref parameter not supported");
-                if (p.ParameterType.IsByRefLike) throw new InvalidOperationException("ref-like parameter not supported");
-            }
-        }
-    }
-
-    public Type Build(Type interfaceType)
-    {
-        Check(interfaceType);
-
-        var typeName = interfaceType.Namespace + "." + interfaceType.Name + "_Proxy";
+        var typeName = type.Namespace + "." + type.Name + "_Proxy";
 
         // already built
-        var t = _module.GetType(typeName);
-        if (t is not null) return t;
+        if (_module.GetType(typeName) is { } t) return t;
 
-        // build new
-        var tb = _module.DefineType(typeName);
+        if (type.IsInterface) return BuildInterface(typeName, type, _module);
 
-        var mapType = typeof(InterfaceToDelegateMap<>).MakeGenericType(interfaceType);
-        var map = EmitDynamicInterface(tb, mapType);
-        EmitInterface(tb, interfaceType, map);
+        //todo: or abstract class
 
-        return tb.CreateType()!;
+        throw new InvalidOperationException("must be interface");
     }
 
-    private static void EmitInterface(TypeBuilder tb, Type interfaceType, FieldBuilder map)
+    public static Type BuildInterface(string typeName, Type interfaceType, ModuleBuilder module)
     {
+        var methods = GetAllInterfaceMethods(interfaceType).ToArray();
+
+        Check(methods);
+
+        // build new
+        var tb = module.DefineType(typeName);
+
+        var mapField = EmitType(tb, interfaceType);
+
+        // emit interface methods
         tb.AddInterfaceImplementation(interfaceType);
 
-        foreach (var m in GetAllMethods(interfaceType))
+        EmitMethods(tb, mapField, methods);
+
+        return tb.CreateType()!;
+
+        static IEnumerable<MethodInfo> GetAllInterfaceMethods(Type t)
         {
-            EmitInterfaceMethod(tb, map, m);
+            var list = new List<Type> { t };
+            if (t.GetInterfaces() is { Length: > 0 } i) list.AddRange(i);
+
+            foreach (var baseInterface in list)
+                foreach (var m in baseInterface.GetMethods())
+                    yield return m;
         }
     }
 
-    private static void EmitInterfaceMethod(TypeBuilder tb, FieldBuilder map, MethodInfo m)
+    private static void Check(IEnumerable<MethodInfo> methods)
+    {
+        foreach (var m in methods) Check(m);
+    }
+
+    private static void Check(MethodInfo m)
+    {
+        if (m.ReturnType.IsByRef) throw new InvalidOperationException("ref return not supported");
+        if (m.ReturnType.IsByRefLike) throw new InvalidOperationException("ref-like return not supported");
+
+        foreach (var p in m.GetParameters())
+        {
+            if (p.IsIn) throw new InvalidOperationException("in parameter not supported");
+            if (p.IsOut) throw new InvalidOperationException("out parameter not supported");
+            if (p.ParameterType.IsByRef) throw new InvalidOperationException("ref parameter not supported");
+            if (p.ParameterType.IsByRefLike) throw new InvalidOperationException("ref-like parameter not supported");
+        }
+    }
+
+    private static void EmitMethods(TypeBuilder tb, FieldBuilder mapField, IEnumerable<MethodInfo> methods)
+    {
+        foreach (var m in methods) EmitMethod(tb, mapField, m);
+    }
+
+    private static void EmitMethod(TypeBuilder tb, FieldBuilder mapField, MethodInfo m)
     {
         var mb = tb.DefineMethod(
             m.Name,
@@ -117,7 +125,7 @@ public class DelegateInterfaceTypeBuilder
 
         // var local = this._map;
         il.Emit(OpCodes.Ldarg_0);
-        il.Emit(OpCodes.Ldfld, map);
+        il.Emit(OpCodes.Ldfld, mapField);
 
         // var d = local.GetOrDefault(nameof(Method))
         il.Emit(OpCodes.Ldstr, m.Name);
@@ -157,15 +165,17 @@ public class DelegateInterfaceTypeBuilder
         il.Emit(OpCodes.Ret);
     }
 
-    private static FieldBuilder EmitDynamicInterface(TypeBuilder tb, Type mapType)
+    private static FieldBuilder EmitType(TypeBuilder tb, Type interfaceType)
     {
+        var mapType = typeof(InterfaceToDelegateMap<>).MakeGenericType(interfaceType);
+
         tb.AddInterfaceImplementation(typeof(IDelegateInterface));
 
         // private Map _map;
         var map = tb.DefineField("_map", mapType, FieldAttributes.Private);
 
         // public T() => _map = new();
-        EmitDynamicInterfaceCtor(tb, mapType, map);
+        EmitDynamicConstructor(tb, mapType, map);
 
         // public Map Methods => _map;
         EmitMethodsProperty(tb, map);
@@ -173,7 +183,7 @@ public class DelegateInterfaceTypeBuilder
         return map;
     }
 
-    private static void EmitDynamicInterfaceCtor(TypeBuilder tb, Type mapType, FieldBuilder map)
+    private static void EmitDynamicConstructor(TypeBuilder tb, Type mapType, FieldBuilder map)
     {
         var ctor = tb.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard, null);
         var il = ctor.GetILGenerator();
