@@ -50,10 +50,9 @@ public class DelegateInterfaceTypeBuilder
         if (_module.GetType(typeName) is { } t) return t;
 
         if (type.IsInterface) return BuildInterface(typeName, type, _module);
+        if (type.IsAbstract) return BuildAbstractClass(typeName, type, _module);
 
-        //todo: or abstract class
-
-        throw new InvalidOperationException("must be interface");
+        throw new InvalidOperationException("must be interface of abstract class");
     }
 
     public static Type BuildInterface(string typeName, Type interfaceType, ModuleBuilder module)
@@ -83,6 +82,26 @@ public class DelegateInterfaceTypeBuilder
                 foreach (var m in baseInterface.GetMethods())
                     yield return m;
         }
+    }
+
+    public static Type BuildAbstractClass(string typeName, Type baseType, ModuleBuilder module)
+    {
+        var methods = GetAllInterfaceMethods(baseType).ToArray();
+
+        Check(methods);
+
+        // build new
+        var tb = module.DefineType(typeName, TypeAttributes.NotPublic | TypeAttributes.Class, baseType);
+
+        var mapField = EmitType(tb, baseType);
+
+        // emit abstract methods
+        EmitMethods(tb, mapField, methods);
+
+        return tb.CreateType()!;
+
+        static IEnumerable<MethodInfo> GetAllInterfaceMethods(Type t)
+            => t.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).Where(m => m.IsAbstract);
     }
 
     private static void Check(IEnumerable<MethodInfo> methods)
