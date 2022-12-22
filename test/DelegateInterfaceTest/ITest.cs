@@ -39,3 +39,9 @@ public interface IDerived : IBase
 {
     string N();
 }
+
+public abstract class A : IDerived
+{
+    public int M() => 0;
+    public abstract string N();
+}

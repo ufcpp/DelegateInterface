@@ -10,6 +10,8 @@ public class CacheTest
     {
         Assert.NotNull(Cache<ITest>.ProxyType);
         Assert.NotNull(Cache<ITest>.CreateInstance());
+        Assert.NotNull(Cache<A>.ProxyType);
+        Assert.NotNull(Cache<A>.CreateInstance());
     }
 
     [Fact]
@@ -17,6 +19,8 @@ public class CacheTest
     {
         Assert.NotNull(Cache.GetProxyType(typeof(ITest)));
         Assert.NotNull(Cache.CreateInstance(typeof(ITest)));
+        Assert.NotNull(Cache.GetProxyType(typeof(A)));
+        Assert.NotNull(Cache.CreateInstance(typeof(A)));
     }
 
     [Fact]
@@ -31,7 +35,7 @@ public class CacheTest
     }
 
     [Fact]
-    public void MustBeInterface()
+    public void MustBeInterfaceOrAbstract()
     {
         Assert.Throws<InvalidOperationException>(() => _ = Cache<R>.ProxyType);
         Assert.Throws<InvalidOperationException>(() => _ = Cache<S>.ProxyType);
