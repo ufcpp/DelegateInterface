@@ -42,6 +42,29 @@ public class DelegateInterfaceTypeBuilder
         _module = _assembly.DefineDynamicModule("DynamicModule");
     }
 
+    internal Type AppendInterfaces(params Type[] types)
+    {
+        if (types.Length == 0) throw new InvalidOperationException("'{nameof(types)}'.Length must be 1 or greater.");
+
+        foreach (var t in types)
+        {
+            if (!t.IsInterface) throw new InvalidOperationException($"All of '{nameof(types)}' must be interace. {t.Name} is not.");
+        }
+
+        var name = string.Join("+", types.Select(t => t.Name));
+        if (types[0].Namespace is { } ns) name = $"{ns}.{name}";
+
+        var tb = _module.DefineType(name,
+            TypeAttributes.Public | TypeAttributes.Interface | TypeAttributes.Abstract);
+
+        foreach (var t in types)
+        {
+            tb.AddInterfaceImplementation(t);
+        }
+
+        return tb.CreateType();
+    }
+
     public Type Build(Type type)
     {
         var typeName = type.Namespace + "." + type.Name + "_Proxy";
