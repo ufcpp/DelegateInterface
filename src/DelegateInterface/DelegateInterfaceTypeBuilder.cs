@@ -44,11 +44,11 @@ public class DelegateInterfaceTypeBuilder
 
     internal Type AppendInterfaces(params Type[] types)
     {
-        if (types.Length == 0) throw new InvalidOperationException("'{nameof(types)}'.Length must be 1 or greater.");
+        if (types.Length == 0) throw new InvalidOperationException($"'{nameof(types)}'.Length must be 1 or greater.");
 
         foreach (var t in types)
         {
-            if (!t.IsInterface) throw new InvalidOperationException($"All of '{nameof(types)}' must be interace. {t.Name} is not.");
+            if (!t.IsInterface) throw new InvalidOperationException($"All of '{nameof(types)}' must be interface. {t.Name} is not.");
         }
 
         var name = string.Join("+", types.Select(t => t.Name));

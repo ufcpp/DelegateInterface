@@ -6,7 +6,7 @@ namespace DelegateInterfaceTest;
 public class InterfaceToDelegateMapTest
 {
     [Fact]
-    public void ThrowIfMethodNotExsit()
+    public void ThrowIfMethodNotExist()
     {
         const string methodName = nameof(ITest.P00);
         const string invalidName = "NotExist";

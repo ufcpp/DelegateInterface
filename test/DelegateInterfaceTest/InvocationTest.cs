@@ -30,7 +30,7 @@ public class InvocationTest
     }
 
     [Fact]
-    public void AnyTypeOfPrameterAndReturn()
+    public void AnyTypeOfParameterAndReturn()
     {
         var x = Cache<ITest>.CreateInstance();
         var m = ((IDelegateInterface)x).Methods;
